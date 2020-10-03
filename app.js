@@ -4,14 +4,25 @@ const morgan = require('morgan')
 const path = require('path')
 const session = require('express-session')
 const dotenv = require('dotenv')
-const pageRouter = require('./routes/page')
-
+const cors = require('cors')
+// const pageRouter = require('./routes/page')
+const { sequelize } = require('./models')
+const usersRouter = require('./routes/users')
+const postsRouter = require('./routes/posts')
+const commentsRouter = require('./routes/comments')
 dotenv.config()
 
 const app = express()
-
+app.use(cors())
 app.set('port', process.env.PORT || 8001)
-
+sequelize
+  .sync({ force: false })
+  .then(() => {
+    console.log('DB 연결성공')
+  })
+  .catch((err) => {
+    console.error(err)
+  })
 app.use(morgan('dev'))
 // express.static()
 // 정적파일을 클라이언트에 전달하는 미들웨어
@@ -40,7 +51,9 @@ app.use(
   })
 )
 
-app.use('/', pageRouter)
+app.use('/', usersRouter)
+app.use('/post', postsRouter)
+app.use('/comment', commentsRouter)
 
 app.use((req, res, next) => {
   const error = new Error(`${req.method} ${req.url} 라우터가 없습니다.`)
